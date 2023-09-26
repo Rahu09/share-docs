@@ -11,43 +11,40 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   collection,
-  getDocs,
-  getDoc,
   addDoc,
   doc,
   serverTimestamp,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useCollectionOnce } from "react-firebase-hooks/firestore";
+import DocumentRow from "@/components/DocumentRow";
 
 export default function Home() {
   const { data: session } = useSession();
 
   const [showModal, setShowModal] = useState(false);
   const [input, setInput] = useState();
-  const [snapshot, loading, error] = useCollectionOnce();
-  // db
-  //   .collection("userDocs")
-  //   .doc(session.user.email)
-  //   .collection("docs")
-  //   .orderBy("timestamp", "desc")
-
-  // console.log(snapshot?.docs[0].data());
-
-  async function getdata() {
-    const user = doc(db, "userDocs", session?.user?.email);
-    const docCollection = collection(user, "docs");
-    const snapshot = await getDocs(docCollection);
-    console.log(snapshot);
-    return snapshot;
-  }
-  getdata();
+  const email = session?.user?.email;
+  const [snapshot] = useCollectionOnce(
+    collection(db, `userDocs/${email}/docs`)
+  );
 
   if (!session) return <Login />;
-  // console.log(session);
+
+  const row = snapshot?.docs.map((doc) => (
+    <DocumentRow
+      key={doc.id}
+      id={doc.id}
+      filename={doc.data().fieldName}
+      date={doc.data().timestamp}
+    />
+  ));
+
   const createDocument = () => {
     if (!input) return;
 
@@ -56,6 +53,9 @@ export default function Home() {
     addDoc(docCollection, {
       fieldName: input,
       timestamp: serverTimestamp(),
+      owner: session?.user?.email,
+      editor: [],
+      viewer: [],
     });
 
     setInput("");
@@ -140,15 +140,9 @@ export default function Home() {
             <p className="mr-12">Date Created</p>
             <Folder color="gray" />
           </div>
+          {row}
         </div>
-        {/* {snapshot?.docs.map((doc) => (
-          <DocumentRow
-            key={doc.id}
-            id={doc.id}
-            filename={doc.data().fileName}
-            data={doc.data().timestamp}
-          />
-        ))} */}
+        {/* <Button onClick={test}>test</Button> */}
       </section>
     </div>
   );

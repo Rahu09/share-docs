@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .options {
+    @apply cursor-pointer hover:bg-gray-100 p-2 transition duration-200 ease-out rounded-lg;
+  }
+}
+
 /* :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
